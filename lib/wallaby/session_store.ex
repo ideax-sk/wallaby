@@ -38,16 +38,25 @@ defmodule Wallaby.SessionStore do
 
     Application.ensure_all_started(:ex_unit)
 
-    ExUnit.after_suite(fn _ ->
-      try do
-        :ets.tab2list(tid)
-        |> Enum.each(&delete_sessions/1)
-      rescue
-        _ -> nil
-      end
-    end)
+    # ExUnit.after_suite(fn _ ->
+    #   try do
+    #     :ets.tab2list(tid)
+    #     |> Enum.each(&delete_sessions/1)
+    #   rescue
+    #     _ -> nil
+    #   end
+    # end)
 
     {:ok, %{ets_table: tid}}
+  end
+
+  def delete_all_sessions(tid) do
+    try do
+      :ets.tab2list(tid)
+      |> Enum.each(&delete_sessions/1)
+    rescue
+      _ -> nil
+    end
   end
 
   def handle_call({:monitor, session}, {pid, _ref}, state) do
