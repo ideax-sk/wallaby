@@ -88,16 +88,19 @@ defmodule Wallaby.SessionStore do
   end
 
   def handle_info({:DOWN, ref, :process, pid, _reason}, state) do
-    [session] =
-      :ets.select(state.ets_table, [
-        {{{:"$1", :_, :_}, :"$4"}, [{:==, :"$1", ref}], [:"$4"]}
-      ])
+    case :ets.select(state.ets_table, [
+           {{{:"$1", :_, :_}, :"$4"}, [{:==, :"$1", ref}], [:"$4"]}
+         ]) do
+      [session] ->
+        WebdriverClient.delete_session(session)
 
-    WebdriverClient.delete_session(session)
+        :ets.delete(state.ets_table, {ref, session.id, pid})
 
-    :ets.delete(state.ets_table, {ref, session.id, pid})
+        emit(%{module: __MODULE__, name: :DOWN, metadata: %{monitored_session: session}})
 
-    emit(%{module: __MODULE__, name: :DOWN, metadata: %{monitored_session: session}})
+      [] ->
+        nil
+    end
 
     {:noreply, state}
   end
