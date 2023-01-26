@@ -106,7 +106,7 @@ defmodule Wallaby.Selenium do
     capabilities = Keyword.get(opts, :capabilities, capabilities_from_config(opts))
 
     with {:ok, response} <- create_session.(base_url, capabilities) do
-      id = response["sessionId"]
+      id = get_session_id(response)
 
       session = %Session{
         session_url: base_url <> "session/#{id}",
@@ -122,6 +122,9 @@ defmodule Wallaby.Selenium do
       {:ok, session}
     end
   end
+
+  defp get_session_id(%{"value" => %{"sessionId" => id}}), do: id
+  defp get_session_id(%{"sessionId" => id}), do: id
 
   defp capabilities_from_config(opts) do
     :wallaby
